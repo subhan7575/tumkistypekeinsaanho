@@ -10,8 +10,8 @@ interface AdUnitProps {
 
 const AdUnit: React.FC<AdUnitProps> = ({ position }) => {
   
-  // Use config from adConfig.ts or fallback to env if exists
-  const env = process.env as any;
+  // Safe environment access
+  const env = (typeof process !== 'undefined' ? process.env : {}) as any;
   const adClientId = env.AD_CLIENT_ID || AD_CONFIG.AD_CLIENT_ID;
   
   const getSlotId = () => {
@@ -51,7 +51,6 @@ const AdUnit: React.FC<AdUnitProps> = ({ position }) => {
     }
   };
 
-  // If user wants custom ads instead of Google Ads
   if (AD_CONFIG.CUSTOM_ADS.ENABLED) {
     return (
       <div className={`ad-wrapper z-20 flex items-center justify-center overflow-hidden ${getStyle()}`}>
@@ -87,7 +86,7 @@ const AdUnit: React.FC<AdUnitProps> = ({ position }) => {
              <div className="text-[10px] text-purple-400 font-mono text-center uppercase tracking-widest px-4">
               {position} AD UNIT<br/>
               <span className="text-white/40 text-[8px] lowercase block mt-1">
-                Edit: adConfig.ts {'->'} {position}
+                Edit: adConfig.ts {"->"} {position}
               </span>
             </div>
           </div>
