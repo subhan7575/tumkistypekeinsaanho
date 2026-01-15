@@ -31,12 +31,14 @@ export default function App() {
   const [state, setState] = useState<AppState>(AppState.INITIAL);
   const [result, setResult] = useState<PersonalityResult | null>(null);
   const [lang, setLang] = useState<Language>('hi');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         setResult(JSON.parse(saved));
+        setState(AppState.RESULT);
       } catch (e) {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -45,34 +47,28 @@ export default function App() {
 
   const handleStart = () => {
     setResult(null);
+    setErrorMessage(null);
     setState(AppState.ANALYZING);
   };
 
   const performAnalysis = async (base64: string) => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Fix: Initialize GoogleGenAI using process.env.API_KEY directly as per SDK guidelines.
+    // The existence and validity of API_KEY is assumed to be handled by the environment.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
     
     const instructions = lang === 'hi' 
-      ? `You are the 'Sachi Baat' Pure Truth Engine. 
-         ROLE: Analyze the face with surgical detail.
-         STRICT RULE: Do not be overly nice. If the user looks lazy, angry, manipulative, or overconfident, you MUST state it. But don't be insulting either. Be BALANCED and REAL.
+      ? `You are the 'Sachi Baat' Personality Engine. 
+         Analyze the face with surgical detail.
+         STRICT RULE: Do not be overly nice. Be honest about flaws (weaknesses) and strengths.
          
-         ANALYSIS POINTS:
-         - Eyes (Confidence vs Hiding something)
-         - Forehead/Eyebrows (Stress vs Intelligence)
-         - Mouth/Jawline (Determination vs Stubbornness)
-         
-         OUTPUT:
-         1. "title": Catchy Roman Urdu title.
-         2. "description": Detailed paragraph in Roman Urdu (Aap/Tum). Use facial evidence (e.g., "Aapki aankhon ki chamak batati hai..." or "Aapke chehre ki sakhti...") to explain both the good and the flaws.
-         3. "reportDescription": Formal third-person for certificate ("Subject ke biometric markers...").
-         4. "darkLine": A raw, viral signature truth line (Left-aligned text).
-         5. "traits": 3 Strengths (Sahi Baat).
-         6. "weaknesses": 2 Flaws/Kharabiyan (Kadwi Baat).
-         
-         Language: Roman Urdu (English alphabet).`
-      : `You are the 'Truth Analyst'. Analyze the subject's face deeply. 
-         Mention strengths and weaknesses based on specific facial markers. 
-         No sugar-coating. Be real. Provide title, description (You), reportDescription (Subject), darkLine, traits, and weaknesses.`;
+         OUTPUT MUST BE JSON:
+         - title: Catchy Roman Urdu title.
+         - description: Detailed paragraph in Roman Urdu addressing the user as 'Aap'.
+         - reportDescription: Formal 3rd person analysis.
+         - darkLine: One raw viral signature line.
+         - traits: Array of 3 strengths.
+         - weaknesses: Array of 2 actual flaws.`
+      : `Analyze the face deeply. Be honest about strengths and flaws. Provide JSON with title, description, reportDescription, darkLine, traits, and weaknesses.`;
 
     try {
       const response = await ai.models.generateContent({
@@ -80,7 +76,7 @@ export default function App() {
         contents: {
           parts: [
             { inlineData: { data: base64, mimeType: 'image/jpeg' } },
-            { text: "Analyze this face for the Sachi Baat platform. Be detailed and honest about both good and bad traits." }
+            { text: "Detailed personality biometric analysis based on this face. Be raw and real." }
           ]
         },
         config: {
@@ -111,9 +107,10 @@ export default function App() {
 
       setResult(finalResult);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(finalResult));
-    } catch (err) {
-      console.error(err);
-      setResult({ ...PERSONALITIES[0] });
+    } catch (err: any) {
+      console.error("Analysis Error:", err);
+      setErrorMessage(err.message || "Neural Analysis Failed. Check internet connection.");
+      setState(AppState.ERROR);
     }
   };
 
@@ -122,17 +119,19 @@ export default function App() {
   };
 
   const handleAnalysisComplete = useCallback(() => {
-    setState(AppState.RESULT);
+    // Only transition if we haven't hit an error during async process
+    setState(prev => prev === AppState.ERROR ? AppState.ERROR : AppState.RESULT);
   }, []);
 
   const handleReset = () => {
     localStorage.removeItem(STORAGE_KEY);
     setResult(null);
+    setErrorMessage(null);
     setState(AppState.INITIAL);
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center z-10 selection:bg-purple-600 selection:text-white bg-neural-gradient">
+    <div className="relative min-h-screen flex flex-col items-center z-10 bg-neural-gradient selection:bg-purple-600 selection:text-white">
       <AdUnit position="SIDE_LEFT" />
       <AdUnit position="SIDE_RIGHT" />
 
@@ -167,6 +166,15 @@ export default function App() {
 
         {state === AppState.ANALYZING && (
           <AnalysisAnimation onCapture={handleCapture} onComplete={handleAnalysisComplete} lang={lang} />
+        )}
+
+        {state === AppState.ERROR && (
+          <div className="flex flex-col items-center text-center space-y-6 animate-slide-up bg-red-500/10 p-10 rounded-3xl border border-red-500/20 max-w-md">
+            <div className="text-red-500 text-4xl font-bold">!</div>
+            <h2 className="text-2xl font-bebas text-white tracking-widest">SYSTEM ERROR</h2>
+            <p className="text-white/60 text-sm leading-relaxed">{errorMessage}</p>
+            <button onClick={handleReset} className="px-10 py-4 bg-white text-black font-bold rounded-xl text-xs uppercase tracking-widest">Restart</button>
+          </div>
         )}
 
         {state === AppState.RESULT && result && (
