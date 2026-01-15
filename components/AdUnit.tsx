@@ -87,7 +87,7 @@ const AdUnit: React.FC<AdUnitProps> = ({ position }) => {
              <div className="text-[10px] text-purple-400 font-mono text-center uppercase tracking-widest px-4">
               {position} AD UNIT<br/>
               <span className="text-white/40 text-[8px] lowercase block mt-1">
-                Edit: adConfig.ts -> {position}
+                Edit: adConfig.ts {'->'} {position}
               </span>
             </div>
           </div>
