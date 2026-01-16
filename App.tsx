@@ -8,7 +8,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 const STORAGE_KEY = 'sachi_baat_personality_v16'; 
 
-export const LogoIcon = ({ className = "w-24 h-24 mb-6", showGlow = true }) => (
+export const LogoIcon = ({ className = "w-16 h-16 md:w-24 md:h-24 mb-4 md:mb-6", showGlow = true }) => (
   <div className={`${className} relative animate-slow-fade`}>
     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -32,7 +32,6 @@ export default function App() {
   const [lang, setLang] = useState<Language>('hi');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  // Refs to track async sync
   const apiDataRef = useRef<PersonalityResult | null>(null);
   const animationFinishedRef = useRef(false);
 
@@ -153,72 +152,78 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center z-10 bg-neural-gradient selection:bg-purple-600 selection:text-white">
+    <div className="relative min-h-screen flex flex-col items-center z-10 bg-neural-gradient selection:bg-purple-600 selection:text-white overflow-x-hidden">
       <AdUnit position="SIDE_LEFT" />
       <AdUnit position="SIDE_RIGHT" />
 
-      <nav className="w-full flex justify-between items-center px-8 py-6 max-w-7xl animate-slow-fade">
-        <div className="flex items-center gap-3">
-           <LogoIcon className="w-8 h-8" showGlow={false} />
-           <span className="text-[10px] uppercase tracking-[0.4em] text-white/40 font-bold">Truth Lab v3.1</span>
+      <nav className="w-full flex justify-between items-center px-4 md:px-8 py-4 md:py-6 max-w-7xl animate-slow-fade">
+        <div className="flex items-center gap-2 md:gap-3">
+           <LogoIcon className="w-8 h-8 md:w-10 md:h-10" showGlow={false} />
+           <div className="flex flex-col">
+             <span className="text-[10px] md:text-xs text-white font-black tracking-widest leading-none">SACHI BAAT</span>
+             <span className="text-[7px] md:text-[8px] uppercase tracking-[0.2em] md:tracking-[0.4em] text-white/40 font-bold">Truth Lab v3.3</span>
+           </div>
         </div>
-        <div className="flex bg-white/5 rounded-xl border border-white/5 p-1 backdrop-blur-md">
-          <button onClick={() => setLang('hi')} className={`px-4 py-2 rounded-lg text-[10px] font-bold tracking-widest transition-all ${lang === 'hi' ? 'bg-purple-600 text-white' : 'text-white/30 hover:text-white'}`}>URDU</button>
-          <button onClick={() => setLang('en')} className={`px-4 py-2 rounded-lg text-[10px] font-bold tracking-widest transition-all ${lang === 'en' ? 'bg-purple-600 text-white' : 'text-white/30 hover:text-white'}`}>ENGLISH</button>
+        <div className="flex bg-white/5 rounded-lg md:rounded-xl border border-white/5 p-1 backdrop-blur-md">
+          <button onClick={() => setLang('hi')} className={`px-2 md:px-4 py-1.5 md:py-2 rounded-md md:rounded-lg text-[8px] md:text-[10px] font-bold tracking-widest transition-all ${lang === 'hi' ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20' : 'text-white/30 hover:text-white'}`}>URDU</button>
+          <button onClick={() => setLang('en')} className={`px-2 md:px-4 py-1.5 md:py-2 rounded-md md:rounded-lg text-[8px] md:text-[10px] font-bold tracking-widest transition-all ${lang === 'en' ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20' : 'text-white/30 hover:text-white'}`}>ENGLISH</button>
         </div>
       </nav>
 
       <AdUnit position="HEADER" />
 
-      <main className="flex-1 w-full flex flex-col items-center justify-center py-6 px-6">
+      <main className="flex-1 w-full flex flex-col items-center justify-center py-4 md:py-8 px-4 md:px-6">
         {state === AppState.INITIAL && (
-          <div className="flex flex-col items-center text-center space-y-8 animate-slide-up max-w-4xl">
+          <div className="flex flex-col items-center text-center space-y-8 md:space-y-12 animate-slide-up max-w-4xl w-full">
             <LogoIcon />
-            <div className="space-y-4">
-              <h1 className="text-6xl md:text-9xl font-bebas tracking-tighter text-white uppercase leading-none">
-                {lang === 'hi' ? 'SACHI' : 'PURE'} <span className="text-purple-500">{lang === 'hi' ? 'BAAT' : 'TRUTH'}</span>
+            <div className="space-y-3 md:space-y-6">
+              <h1 className="text-6xl sm:text-8xl md:text-[10rem] font-bebas tracking-tighter text-white uppercase leading-[0.85] drop-shadow-[0_10px_30px_rgba(147,51,234,0.3)]">
+                {lang === 'hi' ? 'SACHI' : 'PURE'} <span className="text-purple-500 block md:inline">{lang === 'hi' ? 'BAAT' : 'TRUTH'}</span>
               </h1>
-              <p className="text-white/50 text-xs md:text-lg font-light tracking-[0.5em] uppercase px-4">Direct Biometric Disclosure — No Filter</p>
+              <p className="text-white/50 text-[10px] sm:text-xs md:text-xl font-light tracking-[0.3em] md:tracking-[0.6em] uppercase px-2 md:px-4">Biometric Truth Lab • Neural Analysis</p>
             </div>
-            <button onClick={handleStart} className="px-14 py-6 bg-white text-black font-bold tracking-widest rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-2xl border border-white/10">
-              {lang === 'hi' ? 'KADWA SACH JAANEIN' : 'REVEAL PURE TRUTH'}
+            <button onClick={handleStart} className="w-full max-w-xs md:max-w-none md:w-auto px-10 md:px-20 py-5 md:py-8 bg-white text-black font-black tracking-[0.2em] rounded-2xl md:rounded-3xl transition-all hover:scale-105 active:scale-95 shadow-[0_20px_60px_rgba(255,255,255,0.1)] border border-white/20 text-xs md:text-lg uppercase">
+              {lang === 'hi' ? 'KADWA SACH JAANEIN' : 'START TRUTH SCAN'}
             </button>
           </div>
         )}
 
         {state === AppState.ANALYZING && (
-          <div className="w-full flex flex-col items-center gap-6">
+          <div className="w-full flex flex-col items-center gap-6 md:gap-8">
             <AnalysisAnimation onCapture={handleCapture} onComplete={handleAnimationComplete} lang={lang} />
             {animationFinishedRef.current && !apiDataRef.current && (
-              <div className="text-purple-400 font-bold animate-pulse text-xs tracking-widest uppercase">
-                {lang === 'hi' ? 'Server Response Ka Intezar...' : 'Awaiting Final Neural Signature...'}
+              <div className="flex flex-col items-center gap-3">
+                 <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                 <div className="text-purple-400 font-bold animate-pulse text-[10px] md:text-xs tracking-widest uppercase">
+                  {lang === 'hi' ? 'Server Response Ka Intezar...' : 'Awaiting Final Neural Signature...'}
+                </div>
               </div>
             )}
           </div>
         )}
 
         {state === AppState.ERROR && (
-          <div className="flex flex-col items-center text-center space-y-6 animate-slide-up bg-red-500/10 p-10 rounded-3xl border border-red-500/20 max-w-md">
-            <div className="text-red-500 text-5xl font-bold">!</div>
-            <h2 className="text-2xl font-bebas text-white tracking-widest uppercase">Analysis Failed</h2>
-            <p className="text-white/60 text-sm leading-relaxed">{errorMessage}</p>
-            <div className="pt-4 flex flex-col gap-2 w-full">
-               <button onClick={handleReset} className="w-full py-4 bg-white text-black font-bold rounded-xl text-xs uppercase tracking-widest">Retry Process</button>
-               <p className="text-[9px] text-white/20 uppercase">Check if camera and internet are working</p>
+          <div className="flex flex-col items-center text-center space-y-6 md:space-y-8 animate-slide-up bg-red-500/10 p-8 md:p-14 rounded-3xl border border-red-500/20 shadow-2xl max-w-md w-full">
+            <div className="text-red-500 text-5xl md:text-7xl font-bold">!</div>
+            <h2 className="text-2xl md:text-3xl font-bebas text-white tracking-widest uppercase">Analysis Failed</h2>
+            <p className="text-white/60 text-sm md:text-base leading-relaxed">{errorMessage}</p>
+            <div className="pt-6 flex flex-col gap-3 w-full">
+               <button onClick={handleReset} className="w-full py-4 md:py-5 bg-white text-black font-black rounded-xl md:rounded-2xl text-[10px] md:text-xs uppercase tracking-widest">Try Again</button>
+               <p className="text-[9px] md:text-[10px] text-white/20 uppercase tracking-widest">Check camera permissions</p>
             </div>
           </div>
         )}
 
         {state === AppState.RESULT && result && (
-          <div className="w-full max-w-5xl animate-slide-up">
+          <div className="w-full max-w-6xl animate-slide-up">
             <ResultCard result={result} onShare={() => {}} lang={lang} onReset={handleReset} />
           </div>
         )}
       </main>
 
-      <footer className="w-full py-12 flex flex-col items-center gap-2 border-t border-white/5 bg-black/20 backdrop-blur-xl">
-        <p className="text-[10px] text-white/30 uppercase tracking-[0.4em] font-bold">Proprietary Algorithm by Subhan Ahmad</p>
-        <p className="text-[8px] text-white/10 uppercase tracking-[0.6em]">Biometric Processing © 2025</p>
+      <footer className="w-full py-10 md:py-16 flex flex-col items-center gap-2 border-t border-white/5 bg-black/40 backdrop-blur-3xl mt-auto px-4 text-center">
+        <p className="text-[9px] md:text-[11px] text-white/40 uppercase tracking-[0.4em] font-bold">Proprietary Biometric Algorithm by Subhan Ahmad</p>
+        <p className="text-[7px] md:text-[9px] text-white/10 uppercase tracking-[0.6em]">Encrypted Data Transmission © 2025</p>
       </footer>
     </div>
   );
