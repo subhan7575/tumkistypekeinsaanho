@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
-import './index.css';
 
 // Critical for browser-based SDKs that expect process.env
 if (typeof window !== 'undefined') {
