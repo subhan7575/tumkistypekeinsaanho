@@ -1,0 +1,7 @@
+{
+  "name": "Tum Kis Type Ke Insaan Ho?",
+  "description": "A viral personality analysis web app that uses biometric mapping and digital logic to reveal your hidden nature.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
