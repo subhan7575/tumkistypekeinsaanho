@@ -16,7 +16,7 @@ export const AD_CONFIG = {
   // Google AdSense mein "Display Ads" create karein aur unki IDs yahan paste karein:
   SLOTS: {
     // HEADER AD: Website ke sabse oopar (Top) nazar aane wala ad.
-    HEADER: "ca-app-pub-6121799382774662/6495331900",        
+    HEADER: "ca-app-pub-6121799382774662/1649381095",        
 
     // MIDDLE AD: Result card ke andar, Khoobiyan aur Kharabiyan ke pass.
     MIDDLE: "2345678901",        
