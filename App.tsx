@@ -2,11 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppState, PersonalityResult, Language } from './types';
 import AnalysisAnimation from './components/AnalysisAnimation';
 import ResultCard from './components/ResultCard';
-import AdUnit from './components/AdUnit';
+import { GoogleGenAI, Type } from '@google/genai';
 
 const STORAGE_KEY = 'sachi_baat_personality_v18'; 
-
-const SEO_KEYWORDS = "Sachi Baat, Tum Kis Type Ke Insaan Ho, Personality Test, Face Analysis, AI Personality, Urdu AI, Face Scan Certificate";
 
 export const LogoIcon = ({ className = "w-16 h-16 md:w-24 md:h-24 mb-4 md:mb-6" }) => (
   <div className={`${className} relative`}>
@@ -65,17 +63,48 @@ export default function App() {
 
   const performAnalysis = async (base64: string) => {
     try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64, lang })
+      const apiKey = process.env.API_KEY?.trim().replace(/^["']|["']$/g, '');
+      
+      if (!apiKey || apiKey === 'your_real_key_here' || apiKey.length < 10) {
+        throw new Error('API_KEY is missing or invalid in .env file.');
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      
+      const instructions = lang === 'hi'
+        ? `You are the 'Sachi Baat' Personality Engine. Analyze facial features for true character traits. Be extremely honest, bold, and edgy. ALL TEXT OUTPUT MUST BE IN ROMAN URDU (Urdu in English script). Return JSON: title, description (1-line), reportDescription (3 sentences), darkLine (Roman Urdu Sher), traits (5 strings), weaknesses (4 strings).`
+        : `Analyze facial features for personality traits. Be unfiltered and bold. Return JSON: title, description (1-line), reportDescription (3 sentences), darkLine (Philosophical quote), traits (5 strings), weaknesses (4 strings).`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: {
+          parts: [
+            { inlineData: { data: base64, mimeType: 'image/jpeg' } },
+            { text: "Perform deep biometric analysis on this face and reveal their true personality. Be brutally honest." }
+          ]
+        },
+        config: {
+          systemInstruction: instructions,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              description: { type: Type.STRING },
+              reportDescription: { type: Type.STRING },
+              darkLine: { type: Type.STRING },
+              traits: { type: Type.ARRAY, items: { type: Type.STRING } },
+              weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } }
+            },
+            required: ["title", "description", "reportDescription", "darkLine", "traits", "weaknesses"]
+          }
+        }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'API Call Failed');
-      }
+      const textOutput = response.text;
+      if (!textOutput) throw new Error("AI returned no content.");
+      
+      const data = JSON.parse(textOutput);
 
       const finalResult: PersonalityResult = {
         id: `TRUTH-${Math.floor(Math.random() * 90000) + 10000}`,
@@ -89,7 +118,11 @@ export default function App() {
       tryTransitionToResult();
     } catch (err: any) {
       console.error("Analysis Error:", err);
-      setErrorMessage(err.message);
+      let msg = err.message || 'Something went wrong';
+      if (msg.includes('API key not valid')) {
+        msg = "The API Key in your .env is invalid. Please get a new one from AI Studio.";
+      }
+      setErrorMessage(msg);
       setState(AppState.ERROR);
     }
   };
@@ -164,7 +197,7 @@ export default function App() {
             <div className="text-red-500 text-6xl md:text-9xl">✕</div>
             <h2 className="text-lg md:text-2xl font-bold text-white leading-relaxed px-4">{errorMessage}</h2>
             <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-xs text-white/40 font-mono">
-              TIP: Check your environment variables or .env file to ensure the API_KEY is correct.
+              TIP: Ensure your API_KEY is correctly placed in the .env file and restart your project.
             </div>
             <button onClick={handleReset} className="px-10 md:px-20 py-5 md:py-10 bg-white text-black font-black text-lg md:text-2xl rounded-2xl md:rounded-[3rem] uppercase">Try Again</button>
           </div>
