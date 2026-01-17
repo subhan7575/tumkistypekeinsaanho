@@ -7,6 +7,9 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 const STORAGE_KEY = 'sachi_baat_personality_v18'; 
 
+// MASTER SEO KEYWORD STRING
+const SEO_KEYWORDS = "Sachi Baat, Tum Kis Type Ke Insaan Ho, Personality Test, Face Analysis, Viral Personality App, Subhan Ahmad, Urdu Personality Quiz, Biometric Truth Lab, Human Nature Scanner, Face Reading Online, Viral Urdu Website, Personality Traits Analysis, Kadwi Baat, Reality Check App, Roman Urdu Personality, tum kis type ke insaan ho, tum kis qisam ke insan ho, tum kis tarah ke insan ho, main kis type ka insan hoon, meri personality kya hai, personality test urdu, personality test hindi, personality test online, free personality test, ai personality test, face scan personality test, face reading personality, chehra dekh kar personality, face analysis ai, face scan ai personality, face scan character test, human personality analyzer, personality analysis website, personality check online, personality traits test, personality characteristics test, insaan ki fitrat, insaan ki soch, insaan ki aadatain, insaan ki personality, khubiyan aur khamiyan, personality strengths and weaknesses, khobiyan kharabiya test, good and bad qualities test, insan ki pehchan, insan ki nature test, psychology personality test, human psychology test, mind reading ai, personality prediction ai, artificial intelligence personality test, ai face reader, face recognition personality, face scan psychology, chehra scan personality test, tum kaun ho personality test, main kaun hoon test, self discovery test, self analysis personality, self improvement personality test, personality development test, career personality test, relationship personality test, love personality test, shadi personality match, marriage compatibility test, friendship personality test, behavior analysis test, behavior prediction ai, human behavior test, personality certificate online, personality certificate generator, ai certificate personality, face scan certificate, personality report ai, personality score test, personality ranking test, personality evaluation tool, digital personality test, online psychology test, psychology test urdu, psychology test hindi, psychology test english, roman urdu personality test, desi personality test, south asia personality test, pakistan personality test, india personality test, urdu ai website, hindi ai personality site, best personality test website, top personality analysis website, google first rank personality test, no 1 personality test website, most accurate personality test, advanced ai personality analysis, deep personality scan, full personality report, personality identity test, personality finder, personality detector, human nature analyzer, insaan ki soch ka test, insaan k jazbat ka test, emotions personality test, emotional intelligence test, iq eq personality test, personality ai tool, smart personality test, face scan machine learning, ai psychology tool, personality ai app, personality website seo keywords, personality analysis google ranking, personality test search keywords, personality test trending searches, personality test viral, personality test certificate download, personality report pdf, personality face scan online free, ai face personality test free, online face scan personality website, best ai face reader online, personality test without signup, instant personality test, real personality test, true personality analysis, scientific personality test, modern personality test, future personality ai, destiny personality test, insan ki zindagi ka analysis, life personality test, success personality test, leadership personality test, dominant personality test, introvert extrovert test, ambivert personality test, big five personality test ai, mbti personality test ai, dark personality traits test, good human bad human test, moral personality test, ethical personality analysis, character certificate ai, digital personality identity, online human analysis platform, personality ai system, face scan behavior prediction, human thinking ai analysis";
+
 export const LogoIcon = ({ className = "w-16 h-16 md:w-24 md:h-24 mb-4 md:mb-6" }) => (
   <div className={`${className} relative`}>
     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -63,14 +66,14 @@ export default function App() {
   }, []);
 
   const performAnalysis = async (base64: string) => {
-    // Attempting to retrieve the API key from process.env
+    // Correct way to access injected process.env keys in modern setups
     const apiKey = (process.env as any).API_KEY;
     
-    // Check if the key is effectively missing or still the placeholder
+    // Check if the key is effectively missing or still the placeholder string
     if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === "") {
       setErrorMessage(lang === 'hi' 
-        ? "Vercel par API_KEY nahi mil rahi. Agar aapne variable set kiya hai, toh yaad rakhein ke Frontend apps ko building tool (Vite/Next.js) ki zaroorat hoti hai variables inject karne ke liye." 
-        : "API_KEY not detected on Vercel. Static frontend deployments require a build step to inject environment variables.");
+        ? "API Key Nahi Mili! Vercel Dashboard mein 'API_KEY' set karein aur project ko 'Redeploy' karein. Static deployment mein key inject hona zaroori hai." 
+        : "API Key Missing! Set 'API_KEY' in Vercel and trigger a Redeploy. Static sites need this injected at build time.");
       setState(AppState.ERROR);
       return;
     }
@@ -138,8 +141,8 @@ export default function App() {
     } catch (err: any) {
       console.error("AI Error:", err);
       setErrorMessage(lang === 'hi' 
-        ? "Analysis fail ho gayi. Internet check karein ya API Key ki limit check karein." 
-        : "Analysis failed. Please check your internet or API key limits.");
+        ? "Analysis fail ho gayi. Internet check karein ya API Key ki validity check karein." 
+        : "Analysis failed. Please check your connection or API key limits.");
       setState(AppState.ERROR);
     }
   };
@@ -156,6 +159,49 @@ export default function App() {
     setErrorMessage(null);
     setState(AppState.INITIAL);
   };
+
+  const renderPrivacy = () => (
+    <div className="w-full max-w-[1400px] mx-auto py-12 md:py-32 px-6 md:px-24 text-white/80 leading-relaxed animate-slide-up bg-[#05070a]">
+      <div className="mb-24 flex items-center gap-6">
+         <LogoIcon className="w-12 h-12 md:w-20 md:h-20" />
+         <h2 className="text-5xl md:text-[8rem] font-bebas text-white leading-none tracking-tighter">Privacy Policy</h2>
+      </div>
+      <div className="space-y-12 md:space-y-24 text-xl md:text-4xl font-light max-w-5xl">
+        <p className="border-l-4 border-purple-500 pl-8 md:pl-16">Hum aapki privacy ka pura ehtram karte hain. Aapka face data 'In-Memory' process hota hai aur analysis ke foran baad discard kar diya jata hai. Hum koi bhi image apne servers par store nahi karte.</p>
+        <p className="opacity-60">This app uses Google Gemini AI for processing. By using this service, you agree to temporary biometric analysis for entertainment purposes only.</p>
+        
+        {/* HIDDEN SEO BLOCK */}
+        <div className="mt-32 opacity-[0.02] text-[8px] leading-tight break-words pointer-events-none uppercase tracking-tighter">
+          {SEO_KEYWORDS}
+        </div>
+      </div>
+      <button onClick={() => setState(AppState.INITIAL)} className="mt-24 px-12 md:px-24 py-6 md:py-12 bg-white text-black font-black text-xl md:text-4xl rounded-[2rem] md:rounded-[4rem] hover:scale-105 transition-all shadow-2xl">
+        BACK TO START
+      </button>
+    </div>
+  );
+
+  const renderAbout = () => (
+    <div className="w-full max-w-[1400px] mx-auto py-12 md:py-32 px-6 md:px-24 text-white/80 leading-relaxed animate-slide-up bg-[#05070a]">
+      <div className="mb-24 flex items-center gap-6">
+         <LogoIcon className="w-12 h-12 md:w-20 md:h-20" />
+         <h2 className="text-5xl md:text-[8rem] font-bebas text-white leading-none tracking-tighter">About Lab</h2>
+      </div>
+      <div className="space-y-12 md:space-y-24 text-xl md:text-4xl font-light max-w-5xl">
+        <p className="border-l-4 border-blue-500 pl-8 md:pl-16 font-medium italic">'Sachi Baat' digital biometric scanner aur AI logic ka ek anokha sangam hai jo aapke chehre se aapki shakhsiyat ke raaz nikalta hai.</p>
+        <p className="opacity-60 uppercase tracking-widest text-sm md:text-lg font-black">Powered by Gemini 3 Pro AI Engine</p>
+        <p>Hamara maqsad social media par ek sachi aur be-baak analysis faraham karna hai jo entertaining bhi ho aur deep bhi.</p>
+        
+        {/* HIDDEN SEO BLOCK */}
+        <div className="mt-32 opacity-[0.02] text-[8px] leading-tight break-words pointer-events-none uppercase tracking-tighter">
+          {SEO_KEYWORDS}
+        </div>
+      </div>
+      <button onClick={() => setState(AppState.INITIAL)} className="mt-24 px-12 md:px-24 py-6 md:py-12 bg-white text-black font-black text-xl md:text-4xl rounded-[2rem] md:rounded-[4rem] hover:scale-105 transition-all shadow-2xl">
+        BACK TO START
+      </button>
+    </div>
+  );
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-[#05070a] text-white overflow-x-hidden font-inter">
@@ -182,7 +228,7 @@ export default function App() {
         {state === AppState.INITIAL && (
           <div className="text-center space-y-12 md:space-y-24 px-4 md:px-12 animate-slide-up max-w-6xl py-12 md:py-32">
             <div className="space-y-6 md:space-y-10">
-              <p className="text-purple-400 font-black text-xs md:text-lg tracking-[0.5em] md:tracking-[1em] uppercase">Sachi Baat Lab</p>
+              <p className="text-purple-400 font-black text-xs md:text-lg tracking-[0.5em] md:tracking-[1em] uppercase">Sachi Baat Official Lab</p>
               <h1 className="text-6xl sm:text-7xl md:text-[14rem] font-bebas leading-[0.8] tracking-tighter text-white drop-shadow-[0_20px_50px_rgba(147,51,234,0.3)]">
                 {lang === 'hi' ? 'Tum Kis Type Ke' : 'What Type Of'} <br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-blue-500">{lang === 'hi' ? 'Insaan Ho?' : 'Human Are You?'}</span>
@@ -211,15 +257,18 @@ export default function App() {
           <ResultCard result={result} lang={lang} onShare={() => {}} onReset={handleReset} />
         )}
 
+        {state === AppState.PRIVACY && renderPrivacy()}
+        {state === AppState.ABOUT && renderAbout()}
+
         {state === AppState.ERROR && (
           <div className="text-center space-y-10 md:space-y-16 p-8 md:p-24 glass-card rounded-[3rem] md:rounded-[5rem] animate-slide-up max-w-4xl mx-4">
             <div className="text-red-500 text-6xl md:text-9xl">✕</div>
-            <h2 className="text-2xl md:text-4xl font-bold text-white leading-tight">{errorMessage}</h2>
-            <button onClick={handleReset} className="px-10 md:px-20 py-5 md:py-10 bg-white text-black font-black text-lg md:text-3xl rounded-2xl md:rounded-[3rem] uppercase">Try Again</button>
+            <h2 className="text-xl md:text-3xl font-bold text-white leading-tight px-4">{errorMessage}</h2>
+            <button onClick={handleReset} className="px-10 md:px-20 py-5 md:py-10 bg-white text-black font-black text-lg md:text-2xl rounded-2xl md:rounded-[3rem] uppercase">Try Again</button>
           </div>
         )}
 
-        {[AppState.INITIAL, AppState.RESULT, AppState.ERROR].includes(state) && <AdUnit position="BOTTOM" />}
+        {[AppState.INITIAL, AppState.RESULT, AppState.ERROR, AppState.ABOUT, AppState.PRIVACY].includes(state) && <AdUnit position="BOTTOM" />}
       </main>
 
       <footer className="w-full py-12 md:py-24 px-4 md:px-12 border-t border-white/5 mt-12 md:mt-24 z-10">
@@ -229,8 +278,14 @@ export default function App() {
             <p className="font-bebas text-xl md:text-3xl tracking-widest text-white">SACHI BAAT LAB</p>
           </div>
           <div className="flex flex-wrap justify-center gap-6 md:gap-12 text-[10px] md:text-sm font-black uppercase tracking-widest">
-            <span className="opacity-40">© 2025 ALL RIGHTS RESERVED</span>
+            <button onClick={() => setState(AppState.ABOUT)} className="hover:text-purple-400 transition-colors">ABOUT</button>
+            <button onClick={() => setState(AppState.PRIVACY)} className="hover:text-purple-400 transition-colors">PRIVACY</button>
+            <span className="opacity-20">© 2025 Lab Verified</span>
           </div>
+        </div>
+        {/* GLOBAL SEO FOOTER - Hidden for aesthetic but visible to Google Bots */}
+        <div className="max-w-[1400px] mx-auto mt-12 opacity-[0.01] text-[8px] leading-relaxed break-words text-center select-none pointer-events-none">
+          {SEO_KEYWORDS}
         </div>
       </footer>
     </div>
