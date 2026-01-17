@@ -1,19 +1,17 @@
-// App.tsx ke andar performAnalysis function ko update karein:
-const performAnalysis = async (base64: string) => {
-  try {
-    const response = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: base64, lang })
-    });
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
 
-    // Check if response is actually JSON
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const textError = await response.text();
-      console.error("Server returned non-JSON:", textError);
-      throw new Error("Server error (Check Vercel Logs)");
-    }
+const container = document.getElementById('root');
 
-    const data = await response.json();
-    // ... baki code same rahega
+if (container) {
+  const root = createRoot(container);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+} else {
+  // Agar mounting point na mile toh console mein clear error dikhaye
+  console.error("Critical: #root element not found in DOM. Check your index.html");
+}
