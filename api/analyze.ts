@@ -5,60 +5,57 @@ export const config = {
 };
 
 export default async function handler(req: any, res: any) {
-  // 1. Method Check
+  // Sirf POST request allow karein
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // 2. API Key Fetching (Vercel ke liye)
+  // Vercel Environment Variable safety check
   const apiKey = (process.env.API_KEY || '').trim().replace(/^["']|["']$/g, '');
 
   if (!apiKey) {
-    return res.status(500).json({ error: 'Sir, API_KEY Vercel settings mein nahi mili. Please check variables.' });
+    return res.status(500).json({ 
+      error: 'API_KEY is missing. Sir, Vercel ki settings mein check karein aur Redeploy karein.' 
+    });
   }
 
   try {
     const { image, lang } = req.body;
-    
+
     if (!image) {
-      return res.status(400).json({ error: 'Image data is missing' });
+      return res.status(400).json({ error: 'No image data provided' });
     }
 
-    // Base64 clean up
-    const base64Data = image.includes('base64,') ? image.split('base64,')[1] : image;
-
-    // 3. AI Setup
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+    // Clean Base64 (remove prefix)
+    const base64Data = image.split(',')[1] || image;
+
     const prompt = lang === 'hi' 
-      ? "Analyze this person's character from their face. Be bold and edgy. Return ONLY a JSON object in Roman Urdu with these keys: title, description, reportDescription, darkLine, traits (array), weaknesses (array)."
-      : "Analyze this person's character from their face. Return ONLY a JSON object with these keys: title, description, reportDescription, darkLine, traits (array), weaknesses (array).";
+      ? "Analyze this face for personality. Be bold, edgy, and honest. Use Roman Urdu. Return ONLY JSON: {title, description, reportDescription, darkLine, traits[], weaknesses[]}"
+      : "Analyze this face for personality. Return ONLY JSON: {title, description, reportDescription, darkLine, traits[], weaknesses[]}";
 
     const result = await model.generateContent([
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: "image/jpeg"
-        }
-      },
+      { inlineData: { data: base64Data, mimeType: "image/jpeg" } },
       { text: prompt }
     ]);
 
-    const response = await result.response;
-    let text = response.text();
+    const responseText = await result.response.text();
     
-    // 4. JSON Extraction (Zaruri hai kyunki AI kabhi kabhi ```json ... ``` likh deta hai)
-    const jsonStart = text.indexOf('{');
-    const jsonEnd = text.lastIndexOf('}') + 1;
-    const jsonString = text.substring(jsonStart, jsonEnd);
+    // JSON Extracting logic (to avoid "Unexpected Token A")
+    const cleanedJson = responseText.substring(
+      responseText.indexOf('{'),
+      responseText.lastIndexOf('}') + 1
+    );
 
-    return res.status(200).json(JSON.parse(jsonString));
+    return res.status(200).json(JSON.parse(cleanedJson));
 
   } catch (error: any) {
-    console.error("Server Error:", error);
+    console.error("MIKE_SYSTEM_LOG:", error);
+    // Hamesha JSON return karein taake frontend "Unexpected Token" error na de
     return res.status(500).json({ 
-      error: "AI Response error: " + (error.message || "Unknown error")
+      error: "Sir, AI Engine ne error diya: " + (error.message || "Unknown error")
     });
   }
 }
