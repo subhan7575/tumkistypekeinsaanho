@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AD_CONFIG } from '../adConfig';
 
 export type AdPosition = 'HEADER' | 'MIDDLE' | 'BOTTOM' | 'INTERSTITIAL';
@@ -9,6 +8,7 @@ interface AdUnitProps {
 }
 
 const AdUnit: React.FC<AdUnitProps> = ({ position }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const env = (typeof process !== 'undefined' ? process.env : {}) as any;
   const adClientId = env.AD_CLIENT_ID || AD_CONFIG.AD_CLIENT_ID;
   
@@ -25,13 +25,32 @@ const AdUnit: React.FC<AdUnitProps> = ({ position }) => {
   const slotId = getSlotId();
 
   useEffect(() => {
-    if (slotId && adClientId !== 'ca-pub-placeholder' && !AD_CONFIG.CUSTOM_ADS.ENABLED) {
-      try {
-        // @ts-ignore
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (e) {
-        console.error('AdSense error:', e);
-      }
+    // Only push if configured and container is visible/has width
+    if (slotId && adClientId && adClientId !== 'ca-pub-placeholder' && !AD_CONFIG.CUSTOM_ADS.ENABLED) {
+      const initAd = () => {
+        try {
+          if (containerRef.current && containerRef.current.offsetWidth > 0) {
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+          } else {
+            // Retry once after a small delay if width is 0 (common during initial animation)
+            setTimeout(() => {
+              try {
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+              } catch (retryErr) {
+                console.warn('AdSense retry failed:', retryErr);
+              }
+            }, 500);
+          }
+        } catch (e) {
+          console.error('AdSense error:', e);
+        }
+      };
+
+      // Small delay to ensure layout is calculated
+      const timer = setTimeout(initAd, 200);
+      return () => clearTimeout(timer);
     }
   }, [slotId, adClientId]);
 
@@ -45,10 +64,13 @@ const AdUnit: React.FC<AdUnitProps> = ({ position }) => {
     }
   };
 
-  const isConfigured = slotId && adClientId !== 'ca-pub-placeholder';
+  const isConfigured = slotId && adClientId && adClientId !== 'ca-pub-placeholder';
 
   return (
-    <div className={`ad-container relative flex items-center justify-center overflow-hidden transition-all duration-500 ${getStyle()} ${!isConfigured ? 'ad-glow-visible' : ''}`}>
+    <div 
+      ref={containerRef}
+      className={`ad-container relative flex items-center justify-center overflow-hidden transition-all duration-500 ${getStyle()} ${!isConfigured ? 'ad-glow-visible' : ''}`}
+    >
       {AD_CONFIG.CUSTOM_ADS.ENABLED ? (
         <a href={AD_CONFIG.CUSTOM_ADS.REDIRECT_URL} target="_blank" rel="noopener noreferrer" className="w-full h-full block">
           <img src={AD_CONFIG.CUSTOM_ADS.IMAGE_URL} alt="Custom Ad" className="w-full h-full object-cover rounded-2xl" />
