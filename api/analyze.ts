@@ -1,61 +1,104 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI, Type } from '@google/genai';
 
 export const config = {
   runtime: 'nodejs',
 };
 
 export default async function handler(req: any, res: any) {
-  // Sirf POST request allow karein
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Vercel Environment Variable safety check
-  const apiKey = (process.env.API_KEY || '').trim().replace(/^["']|["']$/g, '');
+  // Auto-detect API_KEY from environment (Vercel, Local .env, GitHub, etc.)
+  let apiKey = process.env.API_KEY || '';
+  
+  // Clean the key: remove spaces or accidental quotes
+  apiKey = apiKey.trim().replace(/^["']|["']$/g, '');
 
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.length < 10) {
     return res.status(500).json({ 
-      error: 'API_KEY is missing. Sir, Vercel ki settings mein check karein aur Redeploy karein.' 
+      error: 'API_KEY missing or invalid. Please set your API_KEY in the environment variables or .env file and restart/redeploy.' 
     });
   }
 
   try {
-    const { image, lang } = req.body;
-
-    if (!image) {
-      return res.status(400).json({ error: 'No image data provided' });
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    // Clean Base64 (remove prefix)
-    const base64Data = image.split(',')[1] || image;
-
-    const prompt = lang === 'hi' 
-      ? "Analyze this face for personality. Be bold, edgy, and honest. Use Roman Urdu. Return ONLY JSON: {title, description, reportDescription, darkLine, traits[], weaknesses[]}"
-      : "Analyze this face for personality. Return ONLY JSON: {title, description, reportDescription, darkLine, traits[], weaknesses[]}";
-
-    const result = await model.generateContent([
-      { inlineData: { data: base64Data, mimeType: "image/jpeg" } },
-      { text: prompt }
-    ]);
-
-    const responseText = await result.response.text();
+    const { image, lang } = body;
+    if (!image) {
+      return res.status(400).json({ error: 'No image data provided for analysis.' });
+    }
     
-    // JSON Extracting logic (to avoid "Unexpected Token A")
-    const cleanedJson = responseText.substring(
-      responseText.indexOf('{'),
-      responseText.lastIndexOf('}') + 1
-    );
+    const ai = new GoogleGenAI({ apiKey });
 
-    return res.status(200).json(JSON.parse(cleanedJson));
+    const instructions = lang === 'hi'
+      ? `You are the 'Sachi Baat' Personality Engine. Analyze facial features for true character traits. 
+         Be extremely honest, bold, and edgy. 
+         ALL TEXT OUTPUT MUST BE IN ROMAN URDU (Urdu in English script).
+         JSON structure:
+         - title: Catchy Roman Urdu title.
+         - description: 1-line sharp summary.
+         - reportDescription: 3 sentences of analysis.
+         - darkLine: A poetic Sher in Roman Urdu.
+         - traits: 5 strengths.
+         - weaknesses: 4 flaws.`
+      : `Analyze facial features for personality traits. Be unfiltered.
+         JSON structure:
+         - title: Bold title.
+         - description: 1-line summary.
+         - reportDescription: 3 sentences of analysis.
+         - darkLine: Philosophical quote.
+         - traits: 5 strengths.
+         - weaknesses: 4 flaws.`;
+
+    // Using gemini-3-flash-preview for high performance
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: {
+        parts: [
+          { inlineData: { data: image, mimeType: 'image/jpeg' } },
+          { text: "Analyze this person's character based on biometric facial markers. Give honest results." }
+        ]
+      },
+      config: {
+        systemInstruction: instructions,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            description: { type: Type.STRING },
+            reportDescription: { type: Type.STRING },
+            darkLine: { type: Type.STRING },
+            traits: { type: Type.ARRAY, items: { type: Type.STRING } },
+            weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["title", "description", "reportDescription", "darkLine", "traits", "weaknesses"]
+        }
+      }
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("The AI model returned no content.");
+
+    return res.status(200).json(JSON.parse(text));
 
   } catch (error: any) {
-    console.error("MIKE_SYSTEM_LOG:", error);
-    // Hamesha JSON return karein taake frontend "Unexpected Token" error na de
-    return res.status(500).json({ 
-      error: "Sir, AI Engine ne error diya: " + (error.message || "Unknown error")
-    });
+    console.error('API Error:', error);
+    
+    let message = error.message || 'Server Error occurred during analysis.';
+    
+    if (message.includes('API key not valid') || message.includes('400')) {
+      message = "The provided API Key is not valid. Please check your API_KEY configuration.";
+    }
+
+    return res.status(500).json({ error: message });
   }
 }
