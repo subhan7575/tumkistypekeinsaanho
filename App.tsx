@@ -65,8 +65,8 @@ export default function App() {
   const performAnalysis = async (base64: string) => {
     const apiKey = process.env.API_KEY;
     
-    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-      setErrorMessage(lang === 'hi' ? "API Key nahi mili! Apni environment settings check karein." : "API Key missing! Please check your environment configuration.");
+    if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === "") {
+      setErrorMessage(lang === 'hi' ? "API Key nahi mili! Settings check karein." : "API Key missing! Please check your environment configuration.");
       setState(AppState.ERROR);
       return;
     }
@@ -119,7 +119,11 @@ export default function App() {
         }
       });
 
-      const data = JSON.parse(response.text || "{}");
+      if (!response || !response.text) {
+        throw new Error("Empty response from AI");
+      }
+
+      const data = JSON.parse(response.text.trim());
       const finalResult: PersonalityResult = {
         id: `TRUTH-${Math.floor(Math.random() * 90000) + 10000}`,
         ...data,
@@ -132,7 +136,7 @@ export default function App() {
       tryTransitionToResult();
     } catch (err: any) {
       console.error("AI Error:", err);
-      setErrorMessage(lang === 'hi' ? "Analysis fail ho gayi. Internet check karein ya API Key ki limit check karein." : "Analysis failed. Please check your internet or API Key limits.");
+      setErrorMessage(lang === 'hi' ? "Analysis fail ho gayi. Internet check karein ya API Key sahi se lagayein." : "Analysis failed. Please check your internet or ensure API Key is valid.");
       setState(AppState.ERROR);
     }
   };
@@ -146,8 +150,10 @@ export default function App() {
   const handleReset = () => {
     localStorage.removeItem(STORAGE_KEY);
     setResult(null);
+    setErrorMessage(null);
     setState(AppState.INITIAL);
   };
+
   
   const renderPrivacy = () => (
     <div className="max-w-[1400px] mx-auto py-12 md:py-32 px-6 md:px-24 text-white/80 leading-relaxed animate-slide-up bg-[#05070a]">
